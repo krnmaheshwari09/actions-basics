@@ -1,17 +1,27 @@
-name: workflow overview
+name: variables and secrets
+
+env:
+  WF_VAR: "Workflow level variable"
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
-  a_simple_job:
-    name: my sinmple job name
+  test_variables:
+    env:
+      JOB_VAR: "Job level variable"
+    name: job to test variables
     runs-on: ubuntu-latest
     steps:
-      - name: name of my first step
-        id: stepId
-        run: echo "This is the first step from the first job"
-      - name: step with another shell
-        id: shellId
-        shell: python
-        run: print("This is the step using python shell")
+      - name: test variables
+        id: stepVar
+        env:
+          STEP_VAR: "Step level variable"
+        run: |
+          echo ${{ github.actor}}
+          echo $GITHUB_JOB
+          echo $WF_VAR
+          echo $JOB_VAR
+          echo $STEP_VAR
+          echo ${{ vars.CONF_VAR }}
+          echo ${{ secrets.A_SECRET }}
