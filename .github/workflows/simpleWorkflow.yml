@@ -1,62 +1,41 @@
-name: variables and secrets
-
-env:
-  WF_VAR: "Workflow level variable"
+name: jobs
 
 on:
   push:
 
 jobs:
-  test_expressions:
-    name: job to test expressions
+  concurrency-job2:
     runs-on: ubuntu-latest
-    env:
-      aBoolean: ${{ false }}
-      aNull: ${{ null }}
-      aNumber: ${{ 43 }}
-      aString: this is a string
+    concurrency:
+      group: test
     steps:
-      - name: test null
-        if: (env.aNull == null)
-        run: echo "This variable is null"
-      - name: test boolean
-        if: ${{ fromJSON(env.aBoolean) }}
-        run: echo "This will not run as boolean value is false"
-      - name: test contains function
-        if: ${{ contains(env.aString, 'this') }}
-        run: |
-          echo "our string var contains the word this"
-          echos "but here is the typo that will make this step fails"
-      - name: test status check and format function
-        if: ${{ failure() }}
-        env:
-          FORMAT_VAR: ${{ format('GitHub {0} {1} {2}', 'actions', 'is', 'awesome!') }}
-        run: |
-          echo "this steps runs a special scripts that cleans up the failure steps remaining"
-          echo ${{ env.FORMAT_VAR }}
-      - name: function and always status check
-        if: ${{ startsWith(env.aString, 'this') && always() }}
-        run: sleep 60
-      - name: test cancel status check
-        if: ${{ cancelled() }}
-        run: echo "This step will run if a workflow is cancelled, it can also be used for clean-ups scripts"
+      - run: sleep 15
       
-  test_variables:
-    if: (github.event_name == 'pull_request')
-    env:
-      JOB_VAR: "Job level variable"
-    name: job to test variables
+  concurrency-job1:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test
     steps:
-      - name: test variables
-        id: stepVar
-        env:
-          STEP_VAR: "Step level variable"
+      - run: sleep 15
+      
+  deploy-job:
+    name: deploy job
+    runs-on: ubuntu-latest
+    needs: build-job
+    steps:
+      - name: test build output
+        run: echo ${{ needs.build-job.outputs.build-output }}
+        
+  build-job:
+    outputs:
+      build-output: ${{ steps.buildStep.outputs.buildOut }}
+    name: build job
+    runs-on: ubuntu-latest
+    container:
+      image: oven/bun:slim
+    steps:
+      - name: define output variable
+        id: buildStep
         run: |
-          echo ${{ github.actor}}
-          echo $GITHUB_JOB
-          echo $WF_VAR
-          echo $JOB_VAR
-          echo $STEP_VAR
-          echo ${{ vars.CONF_VAR }}
-          echo ${{ secrets.A_SECRET }}
+          bunver=$(bun --version)
+          echo "buildOut=$bunver" >> "GITHUB_OUTPUT"
