@@ -8,13 +8,13 @@ jobs:
     name: Matrix Strategy
     strategy:
       matrix:
-        runner: [ubuntu-latest, window-latest]
+        runner: [ubuntu-latest, windows-latest]
         python-version: [3.11, 3.12, 3.13]
         include:
           - runner: macos-latest
             python-version: 3.12
         exclude:
-          - runner: window-latest
+          - runner: windows-latest
             python-version: 3.13
     runs-on: ${{ matrix.runner }}
     steps:
