@@ -1,42 +1,21 @@
-name: jobs
+name: matrix
 
 on:
   push:
 
 jobs:
-  concurrency-job2:
-    runs-on: ubuntu-latest
-    concurrency:
-      group: test
+  matrix-job:
+    name: Matrix Strategy
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, window-latest]
+        python-version: [3.11, 3.12, 3.13]
+        include:
+          - runner: macos-latest
+            python-version: 3.12
+        exclude:
+          - runner: window-latest
+            python-version: 3.13
+    runs-on: ${{ matrix.runner }}
     steps:
-      - run: sleep 15
-      
-  concurrency-job1:
-    runs-on: ubuntu-latest
-    concurrency:
-      group: test
-    steps:
-      - run: sleep 15
-      
-  deploy-job:
-    name: deploy job
-    runs-on: ubuntu-latest
-    needs: build-job
-    steps:
-      - name: test build output
-        run: echo ${{ needs.build-job.outputs.build-output }}
-        
-  build-job:
-    outputs:
-      build-output: ${{ steps.buildStep.outputs.buildOut }}
-    name: build job
-    runs-on: ubuntu-latest
-    container:
-      image: oven/bun:slim
-    steps:
-      - name: define output variable
-        id: buildStep
-        run: |
-          bun --version
-          bunver=$(bun --version)
-          echo "buildOut=$bunver" >> "$GITHUB_OUTPUT"
+      - run: echo this job will run in python version ${{ matrix.python-version }}
